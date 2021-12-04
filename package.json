@@ -4,7 +4,8 @@
   "description": "Backend for interface with TwinCAT ADS",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/chadjmccolm/PLC_HMI_Backend/issues"
   },
-  "homepage": "https://github.com/chadjmccolm/PLC_HMI_Backend#readme"
+  "homepage": "https://github.com/chadjmccolm/PLC_HMI_Backend#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  }
 }
