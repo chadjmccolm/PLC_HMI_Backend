@@ -1,0 +1,19 @@
+{
+  "name": "plc_hmi_backend",
+  "version": "0.0.1",
+  "description": "Backend for interface with TwinCAT ADS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chadjmccolm/PLC_HMI_Backend.git"
+  },
+  "author": "Chad McColm",
+  "license": "None",
+  "bugs": {
+    "url": "https://github.com/chadjmccolm/PLC_HMI_Backend/issues"
+  },
+  "homepage": "https://github.com/chadjmccolm/PLC_HMI_Backend#readme"
+}
