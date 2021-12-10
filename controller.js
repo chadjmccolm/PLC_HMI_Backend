@@ -1,31 +1,59 @@
+// Handle imports
 const dataStructure = require("./dataStructure");
 const db = require("./dataStructure");
-const ads = require('ads-client')
+const ads = require('ads-client');
 
+// Define ads.Client settings
 const ADSclient = new ads.Client({
     targetAmsNetId: '127.0.0.1.1.1', //or 'localhost'
     targetAdsPort: 851,
 });
 
+// Create an ADSclient
 ADSclient.connect()
     .then(result => {   
-        console.log(`Connected to the ${result.targetAmsNetId}`)
-        console.log(`Router assigned us AmsNetId ${result.localAmsNetId} and port ${result.localAdsPort}`)
+        console.log(`Connected to the ${result.targetAmsNetId}`);
+        console.log(`Router assigned us AmsNetId ${result.localAmsNetId} and port ${result.localAdsPort}`);
     })
     .catch(err => {
-        console.log('Something failed:', err)
+        console.log('Something failed:', err);
 });
 
 // Retrieve all values from the ADS server
 exports.readAll = (req, res) => {
-    try{
-        data = db;
+
+    // If client not yet connected return an error message
+    if(!ADSclient.connection.connected){
+        res.status(400).send({message: "ADS Client Not Connected"});
+        return;
     }
-    catch (e) {
-        console.log(e);
-        res.status(400).send({message: "Error Grabbing Data"});
-    }
-    res.status(200).send(data);
+
+    // Get the list of symbols
+    symbols = [];
+    ADSclient.readAndCacheSymbols().then(result => {
+        for(element in result){
+            // Add to symbol array if it's not a system variable
+            if(!(result[element].name.startsWith('Constants.') || result[element].name.startsWith('Global_Version.') || result[element].name.startsWith('TwinCAT_SystemInfoVarList.'))){
+                symbols.push(result[element].name);
+            }
+        }
+    }).then(result => {
+        // Then, construct the array of promises and populate
+        promises = [];
+        for(symbol in symbols){
+            promises.push(ADSclient.readSymbol(symbols[symbol]));
+        }
+        Promise.all(promises).then((results) => {
+
+            // When all those promised values return, create an array and send that back
+            output = {};
+            for(result in results){
+                output[results[result].symbol.name] = results[result].value;
+            }
+            res.status(200).send(output);
+        });
+    });
+
 };
 
 // Send the status of the connection
@@ -48,7 +76,7 @@ exports.readOne = (req, res) => {
         return;
     }
 
-    // Construct the output
+    // Construct the output and catch errors
     output = {};
     console.log("Requesting symbol: '" + req.params.symbol + "'");
     ADSclient.readSymbol(req.params.symbol).then(result => {
@@ -58,31 +86,35 @@ exports.readOne = (req, res) => {
     }).catch(err => {
         console.log(err);
         res.status(400).send({message: err});
-    })
+    });
     
 };
 
 // Write a symbols data to the ADS server
 exports.writeOne = (req, res) => {
-    // If symbol parameter then request was empty
+    // If symbol or value parameter not set then request was empty
     if(!req.body.symbol){
         res.status(400).send({message: "Request Symbol Empty"});
         return;
     }
-    else if(!req.body.value){
-        res.status(400).send({message: "Request Symbol Empty"});
+    else if(req.body.value === undefined){
+        res.status(400).send({message: "Request Value Empty"});
         return;
     }
     else{
-        try{
-            db[req.body.symbol] = req.body.value;
-        }
-        catch(e){
-            console.log(e);
-            res.status(500).send({message: "Error Writing Data"});
-            return;
-        }
-        res.status(200).send(db);
+        // Write the value to the ADS server, read it back if successful
+        ADSclient.writeSymbol(req.body.symbol, req.body.value, true).then(result => {
+            ADSclient.readSymbol(req.body.symbol).then(result => {
+                output = {};
+                output[req.body.symbol] = result.value;
+                res.status(200).send(output);
+            }).catch(err => {
+                console.log(err);
+                res.status(400).send({message: err});
+            });
+        }).catch(err => {
+            console.log(err);
+            res.status(400).send({message: err});
+        });
     }
-
 };
