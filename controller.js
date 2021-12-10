@@ -1,7 +1,22 @@
 const dataStructure = require("./dataStructure");
 const db = require("./dataStructure");
+const ads = require('ads-client')
 
-// Retrieve all Tutorials from the database.
+const ADSclient = new ads.Client({
+    targetAmsNetId: '127.0.0.1.1.1', //or 'localhost'
+    targetAdsPort: 851,
+});
+
+ADSclient.connect()
+    .then(result => {   
+        console.log(`Connected to the ${result.targetAmsNetId}`)
+        console.log(`Router assigned us AmsNetId ${result.localAmsNetId} and port ${result.localAdsPort}`)
+    })
+    .catch(err => {
+        console.log('Something failed:', err)
+});
+
+// Retrieve all values from the ADS server
 exports.readAll = (req, res) => {
     try{
         data = db;
@@ -13,21 +28,37 @@ exports.readAll = (req, res) => {
     res.status(200).send(data);
 };
 
-// Find a single Tutorial with an id
+// Send the status of the connection
+exports.connected = (req, res) => {
+    res.status(400).send({connected: ADSclient.connection.connected});
+};
+
+// Find a single symbol from the ADS server
 exports.readOne = (req, res) => {
+
     // If no symbol parameter then request was empty
     if(!req.params.symbol){
         res.status(400).send({message: "Request Content Empty"});
         return;
     }
+
+    // If client not yet connected return an error message
+    if(!ADSclient.connection.connected){
+        res.status(400).send({message: "ADS Client Not Connected"});
+        return;
+    }
+
+    // Construct the output
     output = {};
-    if(db[req.params.symbol]){
-        output[req.params.symbol] = db[req.params.symbol];
+    console.log("Requesting symbol: '" + req.params.symbol + "'");
+    ADSclient.readSymbol(req.params.symbol).then(result => {
+        output[req.params.symbol] = result.value;
+        console.log(output);
         res.status(200).send(output);
-    }
-    else{
-        res.status(400).send({message: "Error Grabbing Data"});
-    }
+    }).catch(err => {
+        console.log(err);
+        res.status(400).send({message: err});
+    })
     
 };
 
