@@ -1,6 +1,4 @@
 // Handle imports
-const dataStructure = require("./dataStructure");
-const db = require("./dataStructure");
 const ads = require('ads-client');
 
 // Define ads.Client settings
