@@ -13,7 +13,7 @@ exports.connect = (req, res) => {
     .then(result => {   
         console.log(`Connected to the ${result.targetAmsNetId}`);
         console.log(`Router assigned us AmsNetId ${result.localAmsNetId} and port ${result.localAdsPort}`);
-        res.status(400).send({connected: ADSclient.connection.connected});
+        res.status(200).send({connected: ADSclient.connection.connected});
     })
     .catch(err => {
         console.log('Something failed:', err);
