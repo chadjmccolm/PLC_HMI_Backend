@@ -8,21 +8,25 @@ const ADSclient = new ads.Client({
 });
 
 // Create an ADSclient
-ADSclient.connect()
+exports.connect = (req, res) => {
+    ADSclient.connect()
     .then(result => {   
         console.log(`Connected to the ${result.targetAmsNetId}`);
         console.log(`Router assigned us AmsNetId ${result.localAmsNetId} and port ${result.localAdsPort}`);
+        res.status(400).send({connected: ADSclient.connection.connected});
     })
     .catch(err => {
         console.log('Something failed:', err);
-});
+        res.status(400).send({connected: ADSclient.connection.connected});
+    });
+}
 
 // Retrieve all values from the ADS server
 exports.readAll = (req, res) => {
 
     // If client not yet connected return an error message
     if(!ADSclient.connection.connected){
-        res.status(400).send({message: "ADS Client Not Connected"});
+        res.status(400).send({message: "ADSClient Not Connected"});
         return;
     }
 

@@ -4,6 +4,9 @@ module.exports = app => {
 
   var router = require("express").Router();
 
+  // Trigger a connection
+  router.get("/connect", controller.connect)
+
   // Retrieve all Tutorials
   router.get("/", controller.readAll);
 
